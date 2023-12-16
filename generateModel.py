@@ -7,7 +7,7 @@ import numpy as np
 
 # 設置CSV文件所在的目錄
 
-csv_directory = "./csvFile"
+csv_directory = "./dataFile"
 
 # 獲取目錄下所有CSV文件
 csv_files = [f for f in os.listdir(csv_directory) if f.endswith('.csv')]
@@ -45,6 +45,7 @@ for train_set in train_data:
         torch.tensor([float(val) for val in row['min_lidar'].strip('[]').split(',')], dtype=torch.float64).clone().detach()
         for _, row in train_set.iterrows()
     ]
+    
 
     car_pos_x_values = [torch.tensor(float(val), dtype=torch.float64) for val in train_set['car_pos_x']]
     
