@@ -1,10 +1,7 @@
 import numpy as np
 from datetime import datetime
-
-
-
+import os
 from UnityAdaptor import transfer_obs
-
 import threading
 import sys
 from rclpy.node import Node
@@ -13,63 +10,54 @@ from std_msgs.msg import String
 import csv
 from datetime import datetime
 
-DEG2RAD = 0.01745329251
-
-
 class AiNode(Node):
     def __init__(self):
         super().__init__("aiNode")
         self.get_logger().info("Ai start")#ros2Ai #unity2Ros
-        self.subsvriber_ = self.create_subscription(String, "unity2Ros", self.receive_data_from_ros, 10)
 
-        self.subsvriber_stopFlag = self.create_subscription(String, "unity2Ros_stop", self.storeDataToCsv, 10)
+        self.subscriber_fromUnity_thu_ROSbridge_ = self.create_subscription(
+            String, 
+            "Unity_2_AI", 
+            self.callback_from_Unity, 
+            10
+        )
 
-        self.allUnityData = list()
+        self.subscriber_fromUnity_thu_ROSbridge_stopFlag = self.create_subscription(
+            String, 
+            "Unity_2_AI_stop_flag", 
+            self.callback_from_Unity_stop_flag, 
+            10
+        )
+
+        self.state_detect = 0
+        self.tokens = list()
     
-    def UnityDataCollect(self, unityState):
-        self.unityState = transfer_obs(unityState)
-        if len(self.unityState.min_lidar) != 0:
-            self.allUnityData.append(
-                [
-                    self.unityState.car_pos.x, 
-                    self.unityState.car_pos.y, 
-                    self.unityState.car_vel.x, 
-                    self.unityState.car_vel.y,
-                    self.unityState.car_angular_vel,
-                    self.unityState.wheel_angular_vel.left_back,
-                    self.unityState.wheel_angular_vel.right_back,
-                    self.unityState.min_lidar,
-                    self.unityState.wheelVelocity
-                ]
-            )
+    def collect_unity_data(self, unityState):
+        self.state_detect, token = transfer_obs(unityState)
+        if self.state_detect == 1:
+            self.tokens.append(token)
+        else:
+            print("Unity lidar no signal.....")
+            
 
-    def receive_data_from_ros(self, msg):
-        self.unityState = msg.data
-        self.UnityDataCollect(self.unityState)
+    def callback_from_Unity(self, msg):
+        self.collect_unity_data(msg.data)
 
-    def storeDataToCsv(self, msg):
-    
+    def callback_from_Unity_stop_flag(self, msg):
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        csv_file_path = f'./dataFile/lstm_training_{timestamp}.csv'
+        csv_directory = os.path.join('.', 'output')
+        csv_file_path = os.path.join(csv_directory, f'lstm_training_{timestamp}.csv')
 
+        os.makedirs(csv_directory, exist_ok=True)
+        
         with open(csv_file_path, 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(['token'])
+            for item in self.tokens:
+                csv_writer.writerow([item])
 
-            csv_writer.writerow(['car_pos_x', 
-                                 'car_pos_y', 
-                                 'car_vel_x', 
-                                 'car_vel_y',
-                                 'car_angular_vel',
-                                 'wheel_angular_vel_left_back',
-                                 'wheel_angular_vel_right_back',
-                                 'min_lidar',
-                                 'wheelVelocity'
-                                 ])
-
-            csv_writer.writerows(self.allUnityData)
-        sys.exit()
-        
-        
+        self.tokens = list()
+        self.get_logger().info("Generate data")        
 
 def spin_pros(node):
     exe = rclpy.executors.SingleThreadedExecutor()
@@ -80,7 +68,6 @@ def spin_pros(node):
 
 
 def main():
-
     rclpy.init()
     node = AiNode()
     pros = threading.Thread(target=spin_pros, args=(node,))
