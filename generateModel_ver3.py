@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-csv_directory = "./dataFile"
+csv_directory = "./output"
 csv_files = [f for f in os.listdir(csv_directory) if f.endswith('.csv')]
 csv_files_test_n = round(len(csv_files) * 0.2)
 
@@ -32,8 +32,8 @@ for index, csv_file in enumerate(csv_files):
         csv_data_collect.append(i[0])    
 
     #for test
-    # train_data.append(csv_data_collect)
-    # test_data.append(csv_data_collect)
+    train_data.append(csv_data_collect)
+    test_data.append(csv_data_collect)
 
     if index > csv_files_test_n:
         train_data.append(csv_data_collect)
@@ -42,18 +42,6 @@ for index, csv_file in enumerate(csv_files):
 
 #---------------------------------
 
-def init_weights(m):
-    if type(m) == nn.LSTM:
-        for name, param in m.named_parameters():
-            if 'weight_ih' in name:
-                init.xavier_uniform_(param.data)
-            elif 'weight_hh' in name:
-                init.orthogonal_(param.data)
-            elif 'bias' in name:
-                param.data.fill_(0)
-    elif type(m) == nn.Linear:
-        init.xavier_uniform_(m.weight)
-        m.bias.data.fill_(0)
 
 data_tensor = torch.tensor(train_data[0], dtype=torch.float32).to(device)
 
@@ -67,8 +55,6 @@ num_layers = 1
 lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True).to(device)
 linear = nn.Linear(hidden_size, Y.size(-1)).to(device)  
 
-lstm.apply(init_weights)
-linear.apply(init_weights)
 lstm = lstm.to(device)
 linear = linear.to(device)
 
@@ -78,7 +64,7 @@ optimizer = torch.optim.Adam(list(lstm.parameters()) + list(linear.parameters())
 best_model = None
 lowest_loss = float('inf')
 
-batch_size = 64 # 每批次的序列数
+batch_size = 64
 num_epochs = 20
 
 training_losses = []
@@ -106,16 +92,12 @@ for epoch in range(num_epochs):
 
             lstm_output, _ = lstm(input_seq, (h0, c0))
             
-            # 获取 LSTM 输出的最后一个时间步骤的隐藏状态
             lstm_output_last = lstm_output[:, -1, :]
             
-            # 使用线性层进行预测
             predicted_output = linear(lstm_output_last)
-            # 计算损失
             loss = criterion(predicted_output, target_seq)
             total_loss += loss.item()
             
-            # 反向传播和优化
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

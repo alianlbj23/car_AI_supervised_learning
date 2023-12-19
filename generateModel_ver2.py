@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-csv_directory = "./dataFile"
+csv_directory = "./output"
 csv_files = [f for f in os.listdir(csv_directory) if f.endswith('.csv')]
 csv_files_test_n = round(len(csv_files) * 0.2)
 
@@ -76,9 +76,8 @@ num_epochs = 20
 training_losses = []
 testing_losses = []
 
-sequence_length = 3  # 序列长度为 3
+sequence_length = 3  
 
-# 为每个数据点创建序列
 new_train_data = []
 new_train_labels = []
 
@@ -93,7 +92,6 @@ for data in train_data:
         new_train_data.append(X_seq)
         new_train_labels.append(Y_seq)
 
-# 转换为 PyTorch 张量
 new_train_data = torch.stack(new_train_data).to(device)
 new_train_labels = torch.tensor(new_train_labels, dtype=torch.float32).to(device)
 
@@ -113,9 +111,6 @@ for data in test_data:
 
 new_test_data = torch.stack(new_test_data).to(device)
 new_test_labels = torch.tensor(new_test_labels, dtype=torch.float32).to(device)
-
-
-
 
 for epoch in range(num_epochs):
 

@@ -46,8 +46,6 @@ class AiNode(Node):
 
         self.model_path = './Model/best_model.pth'
         self.model_weights = torch.load(self.model_path)
-        self.lstm.load_state_dict(self.model_weights['lstm'])
-        self.linear.load_state_dict(self.model_weights['linear'])
 
 
     def publish_predict_data_2_unity(self, data):
@@ -78,7 +76,11 @@ class AiNode(Node):
                     sequence_tensor = torch.tensor(sequence_input, dtype=torch.float32).unsqueeze(0).to(device)
                     print(sequence_tensor.shape)
                     lstm_output = self.lstm(sequence_tensor)
+                    print("#"*100)
+                    print(lstm_output)
+                    print("#"*100)
                     probabilities = F.softmax(lstm_output, dim=1)
+
                     predicted_action = torch.argmax(probabilities, dim=1)
                     self.action_buffer.append(predicted_action.item())
                     if len(self.action_buffer) == 3:
@@ -86,7 +88,6 @@ class AiNode(Node):
                         print("Action sequence:", action_sequence)
                         self.publish_predict_data_2_unity(action_sequence)
 
-                        # 移除最旧的帧和动作
                         self.frame_buffer.pop(0)
                         self.action_buffer.pop(0)
 

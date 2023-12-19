@@ -88,7 +88,6 @@ def transfer_obs(obs):
     lidar_no_element_detect = int(bool(lidar_data))
 
     if lidar_data:
-        # lidar_data = get_90_smallest_lidar_values(lidar_data)
         lidar_data = normalize_lidar_values(lidar_data)
     lidar_data = round_to_decimal_places(lidar_data)
 
@@ -125,6 +124,5 @@ def transfer_obs(obs):
         pattern = 1
     elif wheel_angular_vel[0] > 0 and wheel_angular_vel[1] < 0:
         pattern = 2
-    
     token = str([car_target_distance] + car_orientation + lidar_data + [target_flag] + wheel_angular_vel + [pattern])
     return lidar_no_element_detect, token

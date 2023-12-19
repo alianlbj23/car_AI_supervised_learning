@@ -1,4 +1,4 @@
-#使用lstm
+#使用lstm，將問題當成分類問題
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-csv_directory = "./dataFile"
+csv_directory = "./output"
 csv_files = [f for f in os.listdir(csv_directory) if f.endswith('.csv')]
 csv_files_test_n = round(len(csv_files) * 0.2)
 
@@ -70,15 +70,14 @@ optimizer = torch.optim.Adam(list(lstm.parameters()) + list(linear.parameters())
 best_model = None
 lowest_loss = float('inf')
 
-batch_size = 32 # 每批次的序列数
+batch_size = 32 
 num_epochs = 20
 
 training_losses = []
 testing_losses = []
 
-sequence_length = 3  # 序列长度为 3
+sequence_length = 3  # sequence = 3
 
-# 为每个数据点创建序列
 new_train_data = []
 new_train_labels = []
 
@@ -93,7 +92,6 @@ for data in train_data:
         new_train_data.append(X_seq)
         new_train_labels.append(Y_seq)
 
-# 转换为 PyTorch 张量
 new_train_data = torch.stack(new_train_data).to(device)
 new_train_labels = torch.tensor(new_train_labels, dtype=torch.float32).to(device)
 
@@ -137,7 +135,6 @@ for epoch in range(num_epochs):
         loss = criterion(predicted_output, target_seq.unsqueeze(1))        
         total_loss += loss.item()
         
-        # 反向传播和优化
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()

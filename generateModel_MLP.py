@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-csv_directory = "./dataFile"
+csv_directory = "./output"
 csv_files = [f for f in os.listdir(csv_directory) if f.endswith('.csv')]
 csv_files_test_n = round(len(csv_files) * 0.2)
 
@@ -47,12 +47,14 @@ for index, csv_file in enumerate(csv_files):
     for i in df.values.tolist():
         csv_data_collect.append(i[0])    
 
+    train_data.append(csv_data_collect)
+    test_data.append(csv_data_collect)
     if index > csv_files_test_n:
         train_data.append(csv_data_collect)
     else:
         test_data.append(csv_data_collect)
 
-batch_size = 1
+batch_size = 64
 input_size = 185
 hidden_size1 = 128
 hidden_size2 = 64
@@ -62,7 +64,7 @@ model = MLP(input_size, hidden_size1, hidden_size2, output_size).to(device)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
-num_epochs = 10000
+num_epochs = 10
 
 def get_top_k_probabilities(output, k=3):
     probabilities = torch.nn.functional.softmax(output, dim=1)

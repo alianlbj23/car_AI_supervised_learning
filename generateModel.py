@@ -26,7 +26,7 @@ for index, csv_file in enumerate(csv_files):
     df = pd.read_csv(file_path)
     
     # 使用train_test_split函數按照行號劃分數據，這裡我們根據行號切分
-    # 這裡我們根據行號順序切分，可以通過指定shuffle=False來實現
+    # 根據行號順序切分，可以通過指定shuffle=False來實現
     train_set, test_set = train_test_split(df, test_size=0.2, shuffle=False)
     if index > csv_files_test_n:
     # 將劃分後的數據添加到訓練集和測試集列表中
@@ -111,30 +111,21 @@ class MLP(nn.Module):
         x = self.fc3(x)
         return x
 
-# 设置输入、隐藏和输出的维度
 input_size = 182
-hidden_size1 = 128  # 根据需要调整
+hidden_size1 = 128  
 hidden_size2 = 64
 output_size = 2
 
-# 创建 MLP 模型
 model = MLP(input_size, hidden_size1, hidden_size2, output_size)
 
-# 定义损失函数和优化器
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-# 训练模型
 num_epochs = 20
 
 
 for epoch in range(num_epochs):
-    # 获取每篇文章中各列的最大长度
-   # 获取每篇文章中各列的最大长度
-   # 获取每篇文章中各列的最大长度
 
-
-# Padding sequences in each article
 
     for data in tensor_train_data: #將每一篇每爭畫面抓出來
         car_pos_x = torch.tensor(data['car_pos_x_values'], dtype=torch.float64)
@@ -159,7 +150,6 @@ for epoch in range(num_epochs):
             optimizer.step()
     print(f"Epoch: {epoch} | Loss: {loss}")
 
-# 测试模型
     model.eval()
     with torch.inference_mode():
         for data in tensor_test_data:
